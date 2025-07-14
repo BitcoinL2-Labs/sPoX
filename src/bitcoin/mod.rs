@@ -1,0 +1,39 @@
+//! Contains functionality for interacting with the Bitcoin blockchain
+
+use bitcoin;
+
+pub mod node;
+
+/// Bitcoin chain tip
+#[derive(Debug, PartialEq, Eq)]
+pub struct BlockRef {
+    /// The height of the block in the bitcoin blockchain.
+    pub block_height: u64,
+    /// Bitcoin block hash. It uniquely identifies the bitcoin block.
+    pub block_hash: bitcoin::BlockHash,
+}
+
+impl std::fmt::Display for BlockRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Block(height={}, hash={})",
+            self.block_hash, self.block_height
+        )
+    }
+}
+
+/// Unspent transaction output
+#[derive(Debug)]
+pub struct Utxo {
+    /// Transaction id
+    pub txid: bitcoin::Txid,
+    /// Output index
+    pub vout: u32,
+    /// The script pubkey of this output
+    pub script_pub_key: bitcoin::ScriptBuf,
+    /// Amount of this output
+    pub amount: bitcoin::Amount,
+    /// Block height of this transaction
+    pub block_height: u64,
+}
