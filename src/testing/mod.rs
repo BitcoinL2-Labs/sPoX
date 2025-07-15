@@ -1,6 +1,7 @@
 //! Module with testing utility functions.
 #![allow(clippy::unwrap_in_result, clippy::unwrap_used, clippy::expect_used)]
 
+use crate::config::error::SpoxConfigError;
 use crate::config::{CONFIG_PREFIX, Settings};
 
 /// The path for the configuration file that we should use during testing.
@@ -9,7 +10,7 @@ pub const DEFAULT_CONFIG_PATH: Option<&str> = Some("./src/config/default");
 impl Settings {
     /// Create a new `Settings` instance from the default configuration file.
     /// This is useful for testing.
-    pub fn new_from_default_config() -> Result<Self, config::ConfigError> {
+    pub fn new_from_default_config() -> Result<Self, SpoxConfigError> {
         Self::new(DEFAULT_CONFIG_PATH)
     }
 }

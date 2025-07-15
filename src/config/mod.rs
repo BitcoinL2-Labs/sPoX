@@ -1,14 +1,14 @@
 //! sPoX Configuration
 use std::path::Path;
 
-use config::{Config, ConfigError, Environment, File};
+use config::{Config, Environment, File};
 use serde::Deserialize;
 use url::Url;
 
 use crate::config::error::SpoxConfigError;
 use crate::config::serialization::{duration_seconds_deserializer, url_deserializer};
 
-mod error;
+pub mod error;
 mod serialization;
 
 /// Config environment variables prefix
@@ -26,7 +26,7 @@ pub struct Settings {
     /// How often looking for new deposit transactions
     #[serde(deserialize_with = "duration_seconds_deserializer")]
     pub polling_interval: std::time::Duration,
-    // TODO: stanze for lookup
+    // TODO: add configuration to specify which address to monitor
 }
 
 impl Settings {
@@ -36,7 +36,7 @@ impl Settings {
     ///
     /// The environment variables are prefixed with `SPOX_` and the nested
     /// fields are separated with double underscores.
-    pub fn new(config_path: Option<impl AsRef<Path>>) -> Result<Self, ConfigError> {
+    pub fn new(config_path: Option<impl AsRef<Path>>) -> Result<Self, SpoxConfigError> {
         // To properly parse lists from both environment and config files while
         // using a custom deserializer, we need to specify the list separator,
         // enable try_parsing and specify the keys which should be parsed as lists.
@@ -66,11 +66,9 @@ impl Settings {
     }
 
     /// Perform validation on the configuration.
-    fn validate(&self) -> Result<(), ConfigError> {
+    fn validate(&self) -> Result<(), SpoxConfigError> {
         if self.polling_interval.is_zero() {
-            return Err(ConfigError::Message(
-                SpoxConfigError::ZeroDurationForbidden("polling_interval").to_string(),
-            ));
+            return Err(SpoxConfigError::ZeroDurationForbidden("polling_interval"));
         }
 
         Ok(())
@@ -87,7 +85,7 @@ mod tests {
     use crate::testing::{clear_env, set_var};
 
     /// Helper function to quickly create a URL from a string in tests.
-    fn url(s: &str) -> url::Url {
+    fn parse_url(s: &str) -> url::Url {
         s.parse().unwrap()
     }
 
@@ -104,10 +102,10 @@ mod tests {
         let settings = Settings::new_from_default_config()
             .expect("Failed create settings from default config");
 
-        assert_eq!(settings.emily_endpoint, url("http://127.0.0.1:3031"));
+        assert_eq!(settings.emily_endpoint, parse_url("http://127.0.0.1:3031"));
         assert_eq!(
             settings.bitcoin_rpc_endpoint,
-            url("http://devnet:devnet@127.0.0.1:18443")
+            parse_url("http://devnet:devnet@127.0.0.1:18443")
         );
         assert_eq!(settings.polling_interval, Duration::from_secs(30));
     }
@@ -121,6 +119,19 @@ mod tests {
         let settings = Settings::new_from_default_config().unwrap();
 
         assert_eq!(settings.polling_interval, Duration::from_secs(31));
+    }
+
+    #[test_case("bitcoin_rpc_endpoint"; "bitcoin_rpc_endpoint")]
+    #[test_case("emily_endpoint"; "emily_endpoint")]
+    fn parsing_url_error(field: &str) {
+        clear_env();
+
+        set_var(format!("SPOX_{}", field.to_uppercase()), "not a url");
+
+        assert!(matches!(
+            Settings::new_from_default_config(),
+            Err(SpoxConfigError::ConfigError(_))
+        ));
     }
 
     #[test_case("polling_interval"; "polling interval")]
