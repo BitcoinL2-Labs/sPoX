@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(settings.polling_interval, Duration::from_secs(31));
     }
 
-    #[test_case("polling_interval"; "dkg maxduration")]
+    #[test_case("polling_interval"; "polling interval")]
     fn zero_values_for_nonzero_fields_fail_in_config(field: &str) {
         clear_env();
 
