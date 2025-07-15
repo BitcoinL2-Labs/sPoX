@@ -19,7 +19,7 @@ struct Args {
     config: Option<PathBuf>,
 
     #[clap(short = 'o', long = "output-format", default_value = "pretty")]
-    output_format: Option<LogOutputFormat>,
+    output_format: LogOutputFormat,
 }
 
 #[tokio::main]
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     // Configure the binary's stdout/err output based on the provided output format.
-    let pretty = matches!(args.output_format, Some(LogOutputFormat::Pretty));
+    let pretty = matches!(args.output_format, LogOutputFormat::Pretty);
     spox::logging::setup_logging("info,spox=debug", pretty);
 
     // Load the configuration file and/or environment variables.
