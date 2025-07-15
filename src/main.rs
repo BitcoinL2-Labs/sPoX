@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use spox::config::Settings;
+use spox::context::Context;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum LogOutputFormat {
@@ -38,9 +39,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     // TODO: remove, demo code
-    let bitcoin_client =
-        spox::bitcoin::node::BitcoinCoreClient::try_from(&config.bitcoin_rpc_endpoint)?;
-    dbg!(bitcoin_client.get_chain_tip().unwrap());
+    let context = Context::try_from(&config)?;
+    dbg!(context.bitcoin_client().get_chain_tip()?);
+    dbg!(emily_client::apis::limits_api::get_limits(context.emily_config()).await?);
 
     Ok(())
 }
