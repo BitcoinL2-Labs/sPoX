@@ -4,10 +4,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn dummy_ci_test() {}
-}
