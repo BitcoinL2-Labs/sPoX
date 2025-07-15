@@ -1,0 +1,30 @@
+[package]
+name = "spox"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+testing = []
+
+[dependencies]
+sbtc = { git = "https://github.com/stacks-sbtc/sbtc.git", rev = "02e91d911659c257db686d4fc7c821342b87d655", default-features = false }
+emily-client = { git = "https://github.com/stacks-sbtc/sbtc.git", rev = "02e91d911659c257db686d4fc7c821342b87d655", default-features = false }
+
+clarity = { git = "https://github.com/stacks-network/stacks-core", rev = "49777d3fd73a6dbb610be80c376b7d9389c9871a", default-features = false, features = ["canonical"] }
+
+bitcoin = { version = "0.32.5", default-features = false, features = ["serde", "rand-std"] }
+bitcoincore-rpc = { version = "0.19.0", default-features = false }
+bitcoincore-rpc-json = { version = "0.19.0", default-features = false }
+clap = { version = "4.5.27", default-features = false, features = ["derive", "env", "std", "help"] }
+config = { version = "0.14.1", default-features = false, features = ["toml"] }
+serde = { version = "1.0.217", default-features = false, features = ["derive"] }
+thiserror = { version = "2.0.11", default-features = false }
+tokio = { version = "1.43.0", default-features = false, features = ["signal", "macros", "rt-multi-thread", "rt"] }
+tracing = { version = "0.1.41", default-features = false, features = ["attributes"]}
+tracing-subscriber = { version = "0.3.19", default-features = false, features = ["env-filter", "fmt", "json", "time", "ansi"] }
+url = { version = "2.5.4", default-features = false }
+
+[dev-dependencies]
+testing-emily-client = { git = "https://github.com/stacks-sbtc/sbtc.git", rev = "02e91d911659c257db686d4fc7c821342b87d655", default-features = false }
+test-case = { version = "3.3.1", default-features = false }
