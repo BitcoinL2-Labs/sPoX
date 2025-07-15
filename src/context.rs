@@ -24,7 +24,7 @@ impl TryFrom<&Settings> for Context {
             base_path: value
                 .emily_endpoint
                 .to_string()
-                .trim_end_matches("/")
+                .trim_end_matches('/')
                 .to_string(),
             ..Default::default()
         };
