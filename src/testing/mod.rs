@@ -5,7 +5,7 @@ use crate::config::error::SpoxConfigError;
 use crate::config::{CONFIG_PREFIX, Settings};
 
 /// The path for the configuration file that we should use during testing.
-pub const DEFAULT_CONFIG_PATH: Option<&str> = Some("./src/config/default");
+pub const DEFAULT_CONFIG_PATH: Option<&str> = Some("./src/config/default.toml");
 
 impl Settings {
     /// Create a new `Settings` instance from the default configuration file.
