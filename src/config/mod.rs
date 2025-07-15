@@ -23,7 +23,7 @@ pub struct Settings {
     /// Emily API endpoint
     #[serde(deserialize_with = "url_deserializer_single")]
     pub emily_endpoint: Url,
-    /// How ofter looking for new deposit transactions
+    /// How often looking for new deposit transactions
     #[serde(deserialize_with = "duration_seconds_deserializer")]
     pub polling_interval: std::time::Duration,
     // TODO: stanze for lookup
