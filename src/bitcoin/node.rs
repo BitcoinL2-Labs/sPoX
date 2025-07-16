@@ -75,10 +75,12 @@ impl BitcoinCoreClient {
     }
 
     /// Get UTXOs for addresses
-    /// TODO: change `addresses` to an iterator
-    pub fn get_utxos(&self, addresses: &[ScriptBuf]) -> Result<Vec<Utxo>, Error> {
+    pub fn get_utxos<'a, I>(&self, addresses: I) -> Result<Vec<Utxo>, Error>
+    where
+        I: IntoIterator<Item = &'a ScriptBuf>,
+    {
         let descriptors = addresses
-            .iter()
+            .into_iter()
             .map(|addr| ScanTxOutRequest::Single(format!("raw({})", addr.to_hex_string())))
             .collect::<Vec<_>>();
 
