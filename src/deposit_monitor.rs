@@ -99,7 +99,7 @@ impl DepositMonitor {
             .flat_map(|utxo| {
                 self.get_deposit_from_utxo(utxo, chain_tip)
                     .inspect_err(|error| match error {
-                        Error::DepositExpired => tracing::trace!(
+                        Error::DepositExpired => tracing::info!(
                             %error,
                             txid = %utxo.txid,
                             vout = %utxo.vout,

@@ -91,10 +91,11 @@ async fn runloop(context: Context, deposit_monitor: &DepositMonitor, polling_int
             }
         };
 
-        if last_chain_tip
+        let is_last_chaintip = last_chain_tip
             .as_ref()
-            .is_some_and(|last| last == &chain_tip)
-        {
+            .is_some_and(|last| last == &chain_tip);
+
+        if is_last_chaintip {
             continue;
         }
 
