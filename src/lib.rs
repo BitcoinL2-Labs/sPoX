@@ -1,8 +1,12 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn dummy_ci_test() {}
-}
+pub mod bitcoin;
+pub mod config;
+pub mod context;
+pub mod deposit_monitor;
+pub mod error;
+pub mod logging;
+
+#[cfg(any(test, feature = "testing"))]
+pub mod testing;

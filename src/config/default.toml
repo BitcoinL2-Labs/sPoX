@@ -1,0 +1,17 @@
+# The endpoint of the Emily API server to connect to.
+#
+# Required: true
+# Environment: SPOX_EMILY_ENDPOINT
+emily_endpoint = "http://127.0.0.1:3031"
+
+# The URI of the Bitcoin Core RPC server to connect to.
+#
+# Required: true
+# Environment: SPOX_BITCOIN_RPC_ENDPOINT
+bitcoin_rpc_endpoint = "http://devnet:devnet@127.0.0.1:18443"
+
+# Polling interval in seconds
+#
+# Required: false
+# Environment: SPOX_POLLING_INTERVAL
+# polling_interval = 30
