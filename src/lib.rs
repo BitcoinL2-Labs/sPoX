@@ -3,6 +3,8 @@
 
 pub mod bitcoin;
 pub mod config;
+pub mod context;
+pub mod deposit_monitor;
 pub mod error;
 pub mod logging;
 
