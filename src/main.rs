@@ -38,7 +38,7 @@ struct Args {
 
 async fn fetch_and_create_deposits(
     context: &Context,
-    deposit_monitor: &DepositMonitor,
+    deposit_monitor: &mut DepositMonitor,
     chain_tip: &BlockRef,
 ) -> Result<(), Error> {
     let emily_config = context.emily_config();
@@ -71,7 +71,11 @@ async fn fetch_and_create_deposits(
     Ok(())
 }
 
-async fn runloop(context: Context, deposit_monitor: &DepositMonitor, polling_interval: Duration) {
+async fn runloop(
+    context: Context,
+    deposit_monitor: &mut DepositMonitor,
+    polling_interval: Duration,
+) {
     let bitcoin_client = context.bitcoin_client();
     let mut last_chain_tip = None;
 
@@ -146,9 +150,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: load from config
     let monitored = vec![devenv_deposit_address(&args.signers_xonly)];
 
-    let deposit_monitor = DepositMonitor::new(context.clone(), monitored);
+    let mut deposit_monitor = DepositMonitor::new(context.clone(), monitored);
 
-    runloop(context.clone(), &deposit_monitor, config.polling_interval).await;
+    runloop(
+        context.clone(),
+        &mut deposit_monitor,
+        config.polling_interval,
+    )
+    .await;
 
     Ok(())
 }

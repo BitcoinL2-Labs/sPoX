@@ -24,6 +24,7 @@ tokio = { version = "1.43.0", default-features = false, features = ["signal", "m
 tracing = { version = "0.1.41", default-features = false, features = ["attributes"]}
 tracing-subscriber = { version = "0.3.19", default-features = false, features = ["env-filter", "fmt", "json", "time", "ansi"] }
 url = { version = "2.5.4", default-features = false }
+lru = {version = "0.16.0", default-features = false }
 
 [dev-dependencies]
 testing-emily-client = { git = "https://github.com/stacks-sbtc/sbtc.git", rev = "02e91d911659c257db686d4fc7c821342b87d655", default-features = false }
