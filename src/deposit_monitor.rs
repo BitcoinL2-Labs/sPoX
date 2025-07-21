@@ -93,7 +93,7 @@ impl DepositMonitor {
                     hash
                 );
                 *hash
-            },
+            }
             None => {
                 tracing::debug!(
                     "Fetching block hash for utxo at height {}",
@@ -114,7 +114,7 @@ impl DepositMonitor {
                     block_hash
                 );
                 hex.clone()
-            },
+            }
             None => {
                 tracing::debug!(
                     "Fetching transaction hex for txid {} at block {}",
