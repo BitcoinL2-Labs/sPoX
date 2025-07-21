@@ -38,6 +38,11 @@ pub struct DepositMonitor {
     tx_hex_cache: LruCache<(Txid, BlockHash), String>,
 }
 
+// TODO: make cache sizes configurable
+// As for now numbers are chosen to keep cache size around 10MB
+const HASHES_CACHE_SIZE: NonZero<usize> = NonZero::new(260_000_usize).unwrap();
+const TX_HEX_CACHE_SIZE: NonZero<usize> = NonZero::new(20_000_usize).unwrap();
+
 impl DepositMonitor {
     /// Creates a new `DepositMonitor`
     pub fn new(context: Context, monitored: Vec<MonitoredDeposit>) -> Self {
@@ -46,15 +51,11 @@ impl DepositMonitor {
             .map(|m| (m.to_script_pubkey(), m))
             .collect();
 
-        // TODO: make cache sizes configurable
-        // As for now numbers are chosen to keep cache size around 10MB
-        let hashes_cache_size = NonZero::new(260_000_usize).unwrap();
-        let tx_hex_cache_size = NonZero::new(20_000_usize).unwrap();
         Self {
             context,
             monitored,
-            hashes_cache: LruCache::new(hashes_cache_size),
-            tx_hex_cache: LruCache::new(tx_hex_cache_size),
+            hashes_cache: LruCache::new(HASHES_CACHE_SIZE),
+            tx_hex_cache: LruCache::new(TX_HEX_CACHE_SIZE),
         }
     }
 
@@ -64,6 +65,12 @@ impl DepositMonitor {
         utxo: &Utxo,
         chain_tip: &BlockRef,
     ) -> Result<CreateDepositRequestBody, Error> {
+        tracing::debug!(
+            "Processing utxo: txid={}, vout={}, block_height={}",
+            utxo.txid,
+            utxo.vout,
+            utxo.block_height
+        );
         let monitored_deposit = self
             .monitored
             .get(&utxo.script_pub_key)
@@ -79,8 +86,19 @@ impl DepositMonitor {
 
         let cached_hash = self.hashes_cache.get(&utxo.block_height);
         let block_hash = match cached_hash {
-            Some(hash) => *hash,
+            Some(hash) => {
+                tracing::debug!(
+                    "Using cached block hash for utxo at height {}: {}",
+                    utxo.block_height,
+                    hash
+                );
+                *hash
+            },
             None => {
+                tracing::debug!(
+                    "Fetching block hash for utxo at height {}",
+                    utxo.block_height
+                );
                 let hash = bitcoin_client.get_block_hash(utxo.block_height)?;
                 self.hashes_cache.put(utxo.block_height, hash);
                 hash
@@ -89,8 +107,20 @@ impl DepositMonitor {
 
         let cached_tx_hex = self.tx_hex_cache.get(&(utxo.txid, block_hash));
         let tx_hex = match cached_tx_hex {
-            Some(hex) => hex.clone(),
+            Some(hex) => {
+                tracing::debug!(
+                    "Using cached transaction hex for txid {} at block {}",
+                    utxo.txid,
+                    block_hash
+                );
+                hex.clone()
+            },
             None => {
+                tracing::debug!(
+                    "Fetching transaction hex for txid {} at block {}",
+                    utxo.txid,
+                    block_hash
+                );
                 let tx_hex = bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)?;
                 self.tx_hex_cache
                     .put((utxo.txid, block_hash), tx_hex.clone());
@@ -118,6 +148,10 @@ impl DepositMonitor {
         &mut self,
         chain_tip: &BlockRef,
     ) -> Result<Vec<CreateDepositRequestBody>, Error> {
+        tracing::debug!(
+            "Checking for pending deposits at chain tip: {}",
+            chain_tip.block_height
+        );
         let utxos = self
             .context
             .bitcoin_client()
