@@ -141,12 +141,12 @@ async fn get_signers_xonly_key(config: &Settings) -> Result<(), Box<dyn std::err
 }
 
 async fn get_deposit_address(
-    monitored: &Vec<MonitoredDeposit>,
+    monitored: &[MonitoredDeposit],
     args: &GetDepositAddressArgs,
 ) -> Result<(), Box<dyn std::error::Error>> {
     for deposit in monitored {
         let address = Address::from_script(&deposit.to_script_pubkey(), args.network)?;
-        println!("{}:{}", deposit.alias, address);
+        println!("{}: {}", deposit.alias, address);
     }
     Ok(())
 }
