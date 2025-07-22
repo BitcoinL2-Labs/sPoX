@@ -18,7 +18,7 @@ enum LogOutputFormat {
 
 #[derive(Debug, Subcommand)]
 enum CliCommand {
-    GetSignersPubkey,
+    GetSignersXonlyKey,
 }
 
 /// Command line arguments
@@ -39,7 +39,7 @@ struct Args {
 
 async fn fetch_and_create_deposits(
     context: &Context,
-    deposit_monitor: &DepositMonitor,
+    deposit_monitor: &mut DepositMonitor,
     chain_tip: &BlockRef,
 ) -> Result<(), Error> {
     let emily_config = context.emily_config();
@@ -72,7 +72,11 @@ async fn fetch_and_create_deposits(
     Ok(())
 }
 
-async fn runloop(context: Context, deposit_monitor: &DepositMonitor, polling_interval: Duration) {
+async fn runloop(
+    context: Context,
+    deposit_monitor: &mut DepositMonitor,
+    polling_interval: Duration,
+) {
     let bitcoin_client = context.bitcoin_client();
     let mut last_chain_tip = None;
 
@@ -115,7 +119,7 @@ async fn runloop(context: Context, deposit_monitor: &DepositMonitor, polling_int
     }
 }
 
-async fn get_signers_pubkey(config: &Settings) -> Result<(), Box<dyn std::error::Error>> {
+async fn get_signers_xonly_key(config: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     let stacks_client = StacksClient::try_from(config)?;
 
     let signers_aggregate_key = stacks_client.get_current_signers_aggregate_key().await?;
@@ -146,7 +150,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let context = Context::try_from(&config)?;
 
     match args.command {
-        Some(CliCommand::GetSignersPubkey) => return get_signers_pubkey(&config).await,
+        Some(CliCommand::GetSignersXonlyKey) => return get_signers_xonly_key(&config).await,
         None => (),
     }
 
@@ -156,9 +160,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(TryInto::try_into)
         .collect::<Result<Vec<_>, Error>>()?;
 
-    let deposit_monitor = DepositMonitor::new(context.clone(), monitored);
+    let mut deposit_monitor = DepositMonitor::new(context.clone(), monitored);
 
-    runloop(context.clone(), &deposit_monitor, config.polling_interval).await;
+    runloop(context, &mut deposit_monitor, config.polling_interval).await;
 
     Ok(())
 }

@@ -1,9 +1,11 @@
 //! Module to monitor for pending deposits
 
 use std::collections::HashMap;
+use std::num::NonZero;
 
-use bitcoin::ScriptBuf;
+use bitcoin::{BlockHash, ScriptBuf, Txid};
 use emily_client::models::CreateDepositRequestBody;
+use lru::LruCache;
 use sbtc::deposits::{DepositScriptInputs, ReclaimScriptInputs};
 
 use crate::bitcoin::{BlockRef, Utxo};
@@ -56,7 +58,13 @@ impl TryFrom<(&String, &MonitoredDepositConfig)> for MonitoredDeposit {
 pub struct DepositMonitor {
     context: Context,
     monitored: HashMap<ScriptBuf, MonitoredDeposit>,
+    tx_hex_cache: LruCache<(Txid, BlockHash), String>,
 }
+
+// TODO: make cache size configurable
+// As for now numbers are chosen to keep cache size around 4MB
+const TX_HEX_CACHE_SIZE: NonZero<usize> =
+    NonZero::new(8_000_usize).expect("Cache size must be non-zero");
 
 impl DepositMonitor {
     /// Creates a new `DepositMonitor`
@@ -65,12 +73,17 @@ impl DepositMonitor {
             .into_iter()
             .map(|m| (m.to_script_pubkey(), m))
             .collect();
-        Self { context, monitored }
+
+        Self {
+            context,
+            monitored,
+            tx_hex_cache: LruCache::new(TX_HEX_CACHE_SIZE),
+        }
     }
 
     /// Process a `Utxo` to get a create deposit request for Emily
     pub fn get_deposit_from_utxo(
-        &self,
+        &mut self,
         utxo: &Utxo,
         chain_tip: &BlockRef,
     ) -> Result<CreateDepositRequestBody, Error> {
@@ -87,11 +100,14 @@ impl DepositMonitor {
 
         let bitcoin_client = self.context.bitcoin_client();
 
-        // TODO: cache results
         let block_hash = bitcoin_client.get_block_hash(utxo.block_height)?;
 
-        // TODO: cache results
-        let tx_hex = bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)?;
+        let tx_hex = self
+            .tx_hex_cache
+            .try_get_or_insert((utxo.txid, block_hash), || {
+                bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)
+            })?
+            .clone();
 
         Ok(CreateDepositRequestBody {
             bitcoin_tx_output_index: utxo.vout,
@@ -110,7 +126,7 @@ impl DepositMonitor {
 
     /// Check pending deposits confirmed to the monitored addresses
     pub fn get_pending_deposits(
-        &self,
+        &mut self,
         chain_tip: &BlockRef,
     ) -> Result<Vec<CreateDepositRequestBody>, Error> {
         let utxos = self
