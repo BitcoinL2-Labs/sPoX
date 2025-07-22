@@ -39,7 +39,8 @@ pub struct DepositMonitor {
 
 // TODO: make cache size configurable
 // As for now numbers are chosen to keep cache size around 10MB
-const TX_HEX_CACHE_SIZE: NonZero<usize> = NonZero::new(20_000_usize).unwrap();
+const TX_HEX_CACHE_SIZE: NonZero<usize> =
+    NonZero::new(20_000_usize).expect("Cache size must be non-zero");
 
 impl DepositMonitor {
     /// Creates a new `DepositMonitor`
