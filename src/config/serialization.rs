@@ -1,3 +1,6 @@
+use std::str::FromStr as _;
+
+use bitcoin::{ScriptBuf, XOnlyPublicKey, secp256k1};
 use clarity::types::chainstate::StacksAddress;
 use clarity::vm::types::PrincipalData;
 use serde::{Deserialize, Deserializer};
@@ -41,4 +44,31 @@ where
     PrincipalData::parse_standard_principal(&literal)
         .map(StacksAddress::from)
         .map_err(serde::de::Error::custom)
+}
+
+/// Parse the string into a Stacks PrincipalData.
+pub fn principal_deserializer<'de, D>(des: D) -> Result<PrincipalData, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let literal = <String>::deserialize(des)?;
+    PrincipalData::parse(&literal).map_err(serde::de::Error::custom)
+}
+
+/// Parse the string into a XOnlyPublicKey
+pub fn xonly_deserializer<'de, D>(des: D) -> Result<XOnlyPublicKey, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let literal = <String>::deserialize(des)?;
+    secp256k1::XOnlyPublicKey::from_str(&literal).map_err(serde::de::Error::custom)
+}
+
+/// Parse the string into a ScriptBuf
+pub fn script_deserializer<'de, D>(des: D) -> Result<ScriptBuf, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let literal = <String>::deserialize(des)?;
+    ScriptBuf::from_hex(&literal).map_err(serde::de::Error::custom)
 }

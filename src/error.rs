@@ -59,6 +59,10 @@ pub enum Error {
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
 
+    /// sBTC error
+    #[error(transparent)]
+    Sbtc(#[from] sbtc::error::Error),
+
     /// A call to `scantxoutset` failed
     #[error("a call to `scantxoutset` failed")]
     ScanTxOutFailure,

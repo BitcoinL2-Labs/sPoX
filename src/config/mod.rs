@@ -1,14 +1,18 @@
 //! sPoX Configuration
+use std::collections::HashMap;
 use std::path::Path;
 
+use bitcoin::{ScriptBuf, XOnlyPublicKey};
 use clarity::types::chainstate::StacksAddress;
+use clarity::vm::types::PrincipalData;
 use config::{Config, Environment, File};
 use serde::Deserialize;
 use url::Url;
 
 use crate::config::error::SpoxConfigError;
 use crate::config::serialization::{
-    duration_seconds_deserializer, stacks_address_deserializer, url_deserializer,
+    duration_seconds_deserializer, principal_deserializer, script_deserializer,
+    stacks_address_deserializer, url_deserializer, xonly_deserializer,
 };
 
 pub mod error;
@@ -16,6 +20,24 @@ mod serialization;
 
 /// Config environment variables prefix
 pub const CONFIG_PREFIX: &str = "SPOX";
+
+/// A monitored deposit config
+#[derive(Deserialize, Clone, Debug)]
+pub struct MonitoredDepositConfig {
+    /// The signers xonly aggregate key
+    #[serde(deserialize_with = "xonly_deserializer")]
+    pub signers_xonly: XOnlyPublicKey,
+    /// The deposit recipient
+    #[serde(deserialize_with = "principal_deserializer")]
+    pub recipient: PrincipalData,
+    /// The deposit max fee
+    pub max_fee: u64,
+    /// The reclaim lock time
+    pub lock_time: u32,
+    /// The reclaim script
+    #[serde(deserialize_with = "script_deserializer")]
+    pub reclaim_script: ScriptBuf,
+}
 
 /// Top-level configuration
 #[derive(Deserialize, Clone, Debug)]
@@ -29,9 +51,10 @@ pub struct Settings {
     /// How often looking for new deposit transactions
     #[serde(deserialize_with = "duration_seconds_deserializer")]
     pub polling_interval: std::time::Duration,
+    /// Monitored deposits
+    pub deposit: HashMap<String, MonitoredDepositConfig>,
     /// Stacks config, used only for some CLI commands
     pub stacks: Option<StacksConfig>,
-    // TODO: add configuration to specify which address to monitor
 }
 
 /// Stacks related config.
