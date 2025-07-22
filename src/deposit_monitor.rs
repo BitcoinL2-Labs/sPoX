@@ -81,7 +81,8 @@ impl DepositMonitor {
             .tx_hex_cache
             .try_get_or_insert((utxo.txid, block_hash), || {
                 bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)
-            })?;
+            })?
+            .clone();
 
         Ok(CreateDepositRequestBody {
             bitcoin_tx_output_index: utxo.vout,
