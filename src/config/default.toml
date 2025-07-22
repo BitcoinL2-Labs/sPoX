@@ -17,6 +17,20 @@ bitcoin_rpc_endpoint = "http://devnet:devnet@127.0.0.1:18443"
 # polling_interval = 30
 
 # !! ===========================================================================
+# !! Monitored deposits
+# !! ---------------------------------------------------------------------------
+# !! Each `[deposit.<alias>]` is a monitored deposit.
+# !! ===========================================================================
+[deposit.demo]
+# sBTC devenv demo configuration
+# `signers_xonly` has a placeholder value since it's not constant
+signers_xonly = "0000000000000000000000000000000000000000000000000000000000000001"
+recipient = "ST3497E9JFQ7KB9VEHAZRWYKF3296WQZEXBPXG193"
+max_fee = 20000
+lock_time = 10
+reclaim_script = ""
+
+# !! ===========================================================================
 # !! Stacks configuration
 # !! ---------------------------------------------------------------------------
 # !! This stanza is required only to run some CLI commands, otherwise can be

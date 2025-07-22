@@ -7,11 +7,15 @@ use emily_client::models::CreateDepositRequestBody;
 use sbtc::deposits::{DepositScriptInputs, ReclaimScriptInputs};
 
 use crate::bitcoin::{BlockRef, Utxo};
+use crate::config::MonitoredDepositConfig;
 use crate::context::Context;
 use crate::error::Error;
 
 /// A deposit address to monitor
+#[derive(Debug, Clone)]
 pub struct MonitoredDeposit {
+    /// Monitored deposit alias
+    pub alias: String,
     /// Deposit script inputs
     pub deposit_script_inputs: DepositScriptInputs,
     /// Reclaim script inputs
@@ -25,6 +29,26 @@ impl MonitoredDeposit {
             self.deposit_script_inputs.deposit_script(),
             self.reclaim_script_inputs.reclaim_script(),
         )
+    }
+}
+
+impl TryFrom<(&String, &MonitoredDepositConfig)> for MonitoredDeposit {
+    type Error = Error;
+
+    fn try_from((alias, deposit): (&String, &MonitoredDepositConfig)) -> Result<Self, Self::Error> {
+        let deposit = deposit.clone();
+        Ok(MonitoredDeposit {
+            alias: alias.clone(),
+            deposit_script_inputs: DepositScriptInputs {
+                signers_public_key: deposit.signers_xonly,
+                recipient: deposit.recipient,
+                max_fee: deposit.max_fee,
+            },
+            reclaim_script_inputs: ReclaimScriptInputs::try_new(
+                deposit.lock_time,
+                deposit.reclaim_script,
+            )?,
+        })
     }
 }
 

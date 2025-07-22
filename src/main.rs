@@ -1,16 +1,12 @@
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::time::Duration;
 
-use bitcoin::{ScriptBuf, secp256k1};
 use clap::{Parser, Subcommand, ValueEnum};
-use clarity::vm::types::PrincipalData;
 use emily_client::apis::deposit_api;
-use sbtc::deposits::{DepositScriptInputs, ReclaimScriptInputs};
 use spox::bitcoin::BlockRef;
 use spox::config::Settings;
 use spox::context::Context;
-use spox::deposit_monitor::{DepositMonitor, MonitoredDeposit};
+use spox::deposit_monitor::DepositMonitor;
 use spox::error::Error;
 use spox::stacks::node::StacksClient;
 
@@ -39,10 +35,6 @@ struct Args {
 
     #[clap(short = 'o', long = "output-format", default_value = "pretty")]
     output_format: LogOutputFormat,
-
-    /// TODO: remove once config is ready
-    #[clap(long = "signers-xonly")]
-    signers_xonly: String,
 }
 
 async fn fetch_and_create_deposits(
@@ -123,18 +115,6 @@ async fn runloop(context: Context, deposit_monitor: &DepositMonitor, polling_int
     }
 }
 
-fn devenv_deposit_address(signers_xonly: &str) -> MonitoredDeposit {
-    MonitoredDeposit {
-        deposit_script_inputs: DepositScriptInputs {
-            signers_public_key: secp256k1::XOnlyPublicKey::from_str(signers_xonly).unwrap(),
-            recipient: PrincipalData::parse("ST3497E9JFQ7KB9VEHAZRWYKF3296WQZEXBPXG193").unwrap(),
-            max_fee: 20000,
-        },
-        reclaim_script_inputs: ReclaimScriptInputs::try_new(10, ScriptBuf::from_hex("").unwrap())
-            .unwrap(),
-    }
-}
-
 async fn get_signers_pubkey(config: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     let stacks_client = StacksClient::try_from(config)?;
 
@@ -170,8 +150,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => (),
     }
 
-    // TODO: load from config
-    let monitored = vec![devenv_deposit_address(&args.signers_xonly)];
+    let monitored = config
+        .deposit
+        .iter()
+        .map(TryInto::try_into)
+        .collect::<Result<Vec<_>, Error>>()?;
 
     let deposit_monitor = DepositMonitor::new(context.clone(), monitored);
 
