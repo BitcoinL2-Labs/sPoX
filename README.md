@@ -7,9 +7,9 @@ sPox can be tested with the sBTC devenv:
  - Edit `signer/src/bin/demo_cli.rs`, `exec_deposit` to return after `send_raw_transaction` but before `create_deposit`
  
 Now, in no particular order:
- - Start spox (overwriting the devenv aggregate key; or edit the config with the value returned from `get-signers-pubkey`)
+ - Start spox (overwriting the devenv aggregate key; or edit the config with the value returned from `get-signers-xonly-key`)
     ```bash
-    SPOX_DEPOSIT__DEMO__SIGNERS_XONLY=$(RUST_LOG=info cargo run -- -c src/config/default.toml get-signers-pubkey) RUST_LOG=debug cargo run -- -c src/config/default.toml
+    SPOX_DEPOSIT__DEMO__SIGNERS_XONLY=$(RUST_LOG=info cargo run -- -c src/config/default.toml get-signers-xonly-key) RUST_LOG=debug cargo run -- -c src/config/default.toml
     ```
  - Create a deposit (without notifying emily): `cargo run -p signer --bin demo-cli deposit --amount 123456` (from sBTC)
 
