@@ -87,18 +87,9 @@ impl DepositMonitor {
         let cached_hash = self.hashes_cache.get(&utxo.block_height);
         let block_hash = match cached_hash {
             Some(hash) => {
-                tracing::debug!(
-                    "Using cached block hash for utxo at height {}: {}",
-                    utxo.block_height,
-                    hash
-                );
                 *hash
             }
             None => {
-                tracing::debug!(
-                    "Fetching block hash for utxo at height {}",
-                    utxo.block_height
-                );
                 let hash = bitcoin_client.get_block_hash(utxo.block_height)?;
                 self.hashes_cache.put(utxo.block_height, hash);
                 hash
@@ -108,19 +99,9 @@ impl DepositMonitor {
         let cached_tx_hex = self.tx_hex_cache.get(&(utxo.txid, block_hash));
         let tx_hex = match cached_tx_hex {
             Some(hex) => {
-                tracing::debug!(
-                    "Using cached transaction hex for txid {} at block {}",
-                    utxo.txid,
-                    block_hash
-                );
                 hex.clone()
             }
             None => {
-                tracing::debug!(
-                    "Fetching transaction hex for txid {} at block {}",
-                    utxo.txid,
-                    block_hash
-                );
                 let tx_hex = bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)?;
                 self.tx_hex_cache
                     .put((utxo.txid, block_hash), tx_hex.clone());
