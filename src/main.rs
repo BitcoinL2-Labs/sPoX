@@ -153,7 +153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut deposit_monitor = DepositMonitor::new(context.clone(), monitored);
 
     runloop(
-        context.clone(),
+        context,
         &mut deposit_monitor,
         config.polling_interval,
     )
