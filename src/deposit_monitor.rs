@@ -34,13 +34,11 @@ impl MonitoredDeposit {
 pub struct DepositMonitor {
     context: Context,
     monitored: HashMap<ScriptBuf, MonitoredDeposit>,
-    hashes_cache: LruCache<u64, BlockHash>,
     tx_hex_cache: LruCache<(Txid, BlockHash), String>,
 }
 
-// TODO: make cache sizes configurable
+// TODO: make cache size configurable
 // As for now numbers are chosen to keep cache size around 10MB
-const HASHES_CACHE_SIZE: NonZero<usize> = NonZero::new(260_000_usize).unwrap();
 const TX_HEX_CACHE_SIZE: NonZero<usize> = NonZero::new(20_000_usize).unwrap();
 
 impl DepositMonitor {
@@ -54,7 +52,6 @@ impl DepositMonitor {
         Self {
             context,
             monitored,
-            hashes_cache: LruCache::new(HASHES_CACHE_SIZE),
             tx_hex_cache: LruCache::new(TX_HEX_CACHE_SIZE),
         }
     }
@@ -78,30 +75,13 @@ impl DepositMonitor {
 
         let bitcoin_client = self.context.bitcoin_client();
 
-        let cached_hash = self.hashes_cache.get(&utxo.block_height);
-        let block_hash = match cached_hash {
-            Some(hash) => {
-                *hash
-            }
-            None => {
-                let hash = bitcoin_client.get_block_hash(utxo.block_height)?;
-                self.hashes_cache.put(utxo.block_height, hash);
-                hash
-            }
-        };
+        let block_hash = bitcoin_client.get_block_hash(utxo.block_height)?;
 
-        let cached_tx_hex = self.tx_hex_cache.get(&(utxo.txid, block_hash));
-        let tx_hex = match cached_tx_hex {
-            Some(hex) => {
-                hex.clone()
-            }
-            None => {
-                let tx_hex = bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)?;
-                self.tx_hex_cache
-                    .put((utxo.txid, block_hash), tx_hex.clone());
-                tx_hex
-            }
-        };
+        let tx_hex = self
+            .tx_hex_cache
+            .try_get_or_insert((utxo.txid, block_hash), || {
+                bitcoin_client.get_raw_transaction_hex(&utxo.txid, &block_hash)
+            })?;
 
         Ok(CreateDepositRequestBody {
             bitcoin_tx_output_index: utxo.vout,
