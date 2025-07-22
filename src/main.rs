@@ -22,7 +22,7 @@ enum LogOutputFormat {
 
 #[derive(Debug, Subcommand)]
 enum CliCommand {
-    GetSignersPubkey,
+    GetSignersXonlyKey,
 }
 
 /// Command line arguments
@@ -139,7 +139,7 @@ fn devenv_deposit_address(signers_xonly: &str) -> MonitoredDeposit {
     }
 }
 
-async fn get_signers_pubkey(config: &Settings) -> Result<(), Box<dyn std::error::Error>> {
+async fn get_signers_xonly_key(config: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     let stacks_client = StacksClient::try_from(config)?;
 
     let signers_aggregate_key = stacks_client.get_current_signers_aggregate_key().await?;
@@ -170,7 +170,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let context = Context::try_from(&config)?;
 
     match args.command {
-        Some(CliCommand::GetSignersPubkey) => return get_signers_pubkey(&config).await,
+        Some(CliCommand::GetSignersXonlyKey) => return get_signers_xonly_key(&config).await,
         None => (),
     }
 
