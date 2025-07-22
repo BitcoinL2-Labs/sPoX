@@ -104,10 +104,6 @@ impl DepositMonitor {
         &mut self,
         chain_tip: &BlockRef,
     ) -> Result<Vec<CreateDepositRequestBody>, Error> {
-        tracing::debug!(
-            "Checking for pending deposits at chain tip: {}",
-            chain_tip.block_height
-        );
         let utxos = self
             .context
             .bitcoin_client()
