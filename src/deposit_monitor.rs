@@ -65,12 +65,6 @@ impl DepositMonitor {
         utxo: &Utxo,
         chain_tip: &BlockRef,
     ) -> Result<CreateDepositRequestBody, Error> {
-        tracing::debug!(
-            "Processing utxo: txid={}, vout={}, block_height={}",
-            utxo.txid,
-            utxo.vout,
-            utxo.block_height
-        );
         let monitored_deposit = self
             .monitored
             .get(&utxo.script_pub_key)
