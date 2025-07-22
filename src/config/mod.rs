@@ -1,12 +1,15 @@
 //! sPoX Configuration
 use std::path::Path;
 
+use clarity::types::chainstate::StacksAddress;
 use config::{Config, Environment, File};
 use serde::Deserialize;
 use url::Url;
 
 use crate::config::error::SpoxConfigError;
-use crate::config::serialization::{duration_seconds_deserializer, url_deserializer};
+use crate::config::serialization::{
+    duration_seconds_deserializer, stacks_address_deserializer, url_deserializer,
+};
 
 pub mod error;
 mod serialization;
@@ -26,7 +29,20 @@ pub struct Settings {
     /// How often looking for new deposit transactions
     #[serde(deserialize_with = "duration_seconds_deserializer")]
     pub polling_interval: std::time::Duration,
+    /// Stacks config, used only for some CLI commands
+    pub stacks: Option<StacksConfig>,
     // TODO: add configuration to specify which address to monitor
+}
+
+/// Stacks related config.
+#[derive(Deserialize, Clone, Debug)]
+pub struct StacksConfig {
+    /// Stacks rpc endpoint
+    #[serde(deserialize_with = "url_deserializer")]
+    pub rpc_endpoint: Url,
+    /// The address of the deployer of the sBTC smart contracts.
+    #[serde(deserialize_with = "stacks_address_deserializer")]
+    pub deployer: StacksAddress,
 }
 
 impl Settings {

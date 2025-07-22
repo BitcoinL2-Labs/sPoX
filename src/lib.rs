@@ -7,6 +7,7 @@ pub mod context;
 pub mod deposit_monitor;
 pub mod error;
 pub mod logging;
+pub mod stacks;
 
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
