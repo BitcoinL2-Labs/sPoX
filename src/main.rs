@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use bitcoin::{ScriptBuf, secp256k1};
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum};
 use clarity::vm::types::PrincipalData;
 use emily_client::apis::deposit_api;
 use sbtc::deposits::{DepositScriptInputs, ReclaimScriptInputs};
@@ -12,6 +12,7 @@ use spox::config::Settings;
 use spox::context::Context;
 use spox::deposit_monitor::{DepositMonitor, MonitoredDeposit};
 use spox::error::Error;
+use spox::stacks::node::StacksClient;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum LogOutputFormat {
@@ -19,10 +20,18 @@ enum LogOutputFormat {
     Pretty,
 }
 
+#[derive(Debug, Subcommand)]
+enum CliCommand {
+    GetSignersXonlyKey,
+}
+
 /// Command line arguments
 #[derive(Debug, Parser)]
 #[clap(name = "sPoX")]
 struct Args {
+    #[command(subcommand)]
+    command: Option<CliCommand>,
+
     /// Optional path to the configuration file. If not provided, it is expected
     /// that all required parameters are provided via environment variables.
     #[clap(short = 'c', long, required = false)]
@@ -130,6 +139,19 @@ fn devenv_deposit_address(signers_xonly: &str) -> MonitoredDeposit {
     }
 }
 
+async fn get_signers_xonly_key(config: &Settings) -> Result<(), Box<dyn std::error::Error>> {
+    let stacks_client = StacksClient::try_from(config)?;
+
+    let signers_aggregate_key = stacks_client.get_current_signers_aggregate_key().await?;
+
+    match signers_aggregate_key {
+        Some(public_key) => println!("{public_key}"),
+        None => return Err(Box::new(Error::NoSignersAggregateKey)),
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 #[tracing::instrument(name = "spox")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -146,6 +168,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let context = Context::try_from(&config)?;
+
+    match args.command {
+        Some(CliCommand::GetSignersXonlyKey) => return get_signers_xonly_key(&config).await,
+        None => (),
+    }
 
     // TODO: load from config
     let monitored = vec![devenv_deposit_address(&args.signers_xonly)];

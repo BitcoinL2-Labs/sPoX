@@ -15,3 +15,22 @@ bitcoin_rpc_endpoint = "http://devnet:devnet@127.0.0.1:18443"
 # Required: false
 # Environment: SPOX_POLLING_INTERVAL
 # polling_interval = 30
+
+# !! ===========================================================================
+# !! Stacks configuration
+# !! ---------------------------------------------------------------------------
+# !! This stanza is required only to run some CLI commands, otherwise can be
+# !! omitted.
+# !! ===========================================================================
+[stacks]
+# Stacks rpc endpoint
+#
+# Required: true
+# Environment: SPOX_STACKS__RPC_ENDPOINT
+rpc_endpoint = "http://127.0.0.1:20443"
+
+# The address of the deployer of the sBTC smart contracts.
+#
+# Required: true
+# Environment: SPOX_STACKS__DEPLOYER
+deployer = "SN3R84XZYA63QS28932XQF3G1J8R9PC3W76P9CSQS"

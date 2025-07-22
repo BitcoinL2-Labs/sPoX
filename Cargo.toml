@@ -18,6 +18,7 @@ bitcoincore-rpc = { version = "0.19.0", default-features = false }
 bitcoincore-rpc-json = { version = "0.19.0", default-features = false }
 clap = { version = "4.5.27", default-features = false, features = ["derive", "env", "std", "help"] }
 config = { version = "0.14.1", default-features = false, features = ["toml"] }
+reqwest = { version = "0.12.22", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1.0.217", default-features = false, features = ["derive"] }
 thiserror = { version = "2.0.11", default-features = false }
 tokio = { version = "1.43.0", default-features = false, features = ["signal", "macros", "rt-multi-thread", "rt"] }
@@ -27,5 +28,6 @@ url = { version = "2.5.4", default-features = false }
 lru = {version = "0.16.0", default-features = false }
 
 [dev-dependencies]
+mockito = { version = "1.7.0", default-features = false }
 testing-emily-client = { git = "https://github.com/stacks-sbtc/sbtc.git", rev = "02e91d911659c257db686d4fc7c821342b87d655", default-features = false }
 test-case = { version = "3.3.1", default-features = false }
