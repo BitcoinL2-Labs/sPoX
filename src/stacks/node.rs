@@ -79,7 +79,6 @@ impl StacksClient {
         let response = self
             .client
             .get(url)
-            .timeout(REQUEST_TIMEOUT)
             .send()
             .await
             .map_err(Error::StacksNodeRequest)?;
