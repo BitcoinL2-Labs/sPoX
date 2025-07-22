@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 use std::time::Duration;
 
-use bitcoin::PublicKey;
+use bitcoin::{PublicKey, XOnlyPublicKey};
 use clarity::types::chainstate::StacksAddress;
 use clarity::vm::types::{BuffData, SequenceData};
 use clarity::vm::{ClarityName, ContractName, Value};
@@ -94,7 +94,7 @@ impl StacksClient {
 
     /// Retrieve the current signers' aggregate key from the `sbtc-registry`
     /// contract.
-    pub async fn get_current_signers_aggregate_key(&self) -> Result<Option<PublicKey>, Error> {
+    pub async fn get_current_signers_aggregate_key(&self) -> Result<Option<XOnlyPublicKey>, Error> {
         let value = self
             .get_data_var(
                 &self.deployer,
@@ -137,7 +137,7 @@ where
 /// byte, allowing use to distinguish between the initial value and an
 /// actual public key in that case. Ok(None) is returned if the value is
 /// the initial value.
-fn extract_aggregate_key(value: Value) -> Result<Option<PublicKey>, Error> {
+fn extract_aggregate_key(value: Value) -> Result<Option<XOnlyPublicKey>, Error> {
     match value {
         Value::Sequence(SequenceData::Buffer(BuffData { data })) => {
             // The initial value of the data var is all zeros
@@ -145,7 +145,7 @@ fn extract_aggregate_key(value: Value) -> Result<Option<PublicKey>, Error> {
                 Ok(None)
             } else {
                 PublicKey::from_slice(&data)
-                    .map(Some)
+                    .map(|key| Some(XOnlyPublicKey::from(key)))
                     .map_err(Error::InvalidPublicKey)
             }
         }
@@ -191,7 +191,7 @@ mod tests {
             expected = None;
         } else {
             data = aggregate_key.inner.serialize().to_vec();
-            expected = Some(aggregate_key);
+            expected = Some(aggregate_key.into());
         }
         let aggregate_key_clarity = Value::Sequence(SequenceData::Buffer(BuffData { data }));
 
