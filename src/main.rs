@@ -1,12 +1,13 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+use bitcoin::Address;
 use clap::{Parser, Subcommand, ValueEnum};
 use emily_client::apis::deposit_api;
 use spox::bitcoin::BlockRef;
 use spox::config::Settings;
 use spox::context::Context;
-use spox::deposit_monitor::DepositMonitor;
+use spox::deposit_monitor::{DepositMonitor, MonitoredDeposit};
 use spox::error::Error;
 use spox::stacks::node::StacksClient;
 
@@ -16,9 +17,16 @@ enum LogOutputFormat {
     Pretty,
 }
 
+#[derive(Debug, Clone, Parser)]
+struct GetDepositAddressArgs {
+    #[clap(short = 'n', long = "network", default_value = "bitcoin")]
+    pub network: bitcoin::Network,
+}
+
 #[derive(Debug, Subcommand)]
 enum CliCommand {
     GetSignersXonlyKey,
+    GetDepositAddress(GetDepositAddressArgs),
 }
 
 /// Command line arguments
@@ -132,6 +140,17 @@ async fn get_signers_xonly_key(config: &Settings) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
+async fn get_deposit_address(
+    monitored: &[MonitoredDeposit],
+    args: &GetDepositAddressArgs,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for deposit in monitored {
+        let address = Address::from_script(&deposit.to_script_pubkey(), args.network)?;
+        println!("{}: {}", deposit.alias, address);
+    }
+    Ok(())
+}
+
 #[tokio::main]
 #[tracing::instrument(name = "spox")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -149,16 +168,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let context = Context::try_from(&config)?;
 
-    match args.command {
-        Some(CliCommand::GetSignersXonlyKey) => return get_signers_xonly_key(&config).await,
-        None => (),
-    }
-
     let monitored = config
         .deposit
         .iter()
         .map(TryInto::try_into)
         .collect::<Result<Vec<_>, Error>>()?;
+
+    match args.command {
+        Some(CliCommand::GetSignersXonlyKey) => return get_signers_xonly_key(&config).await,
+        Some(CliCommand::GetDepositAddress(args)) => {
+            return get_deposit_address(&monitored, &args).await;
+        }
+        None => (),
+    }
 
     let mut deposit_monitor = DepositMonitor::new(context.clone(), monitored);
 
