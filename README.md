@@ -32,7 +32,7 @@ Then you can run:
 ```
 to get the latest key from the sBTC registry smart contract.
 
-### Get a despoit address
+### Get a deposit address
 
 Once you have configured a deposit, you can run:
 ```bash
@@ -44,7 +44,7 @@ To get the deposit address, for each configured deposit.
 
 Once the configuration is completed, you can run `sPoX`:
 ```bash
-./spox -c <<config file>
+./spox -c <config file>
 ```
 The binary will monitor the Bitcoin blockchain for payments made to the monitored addresses, and when a new payment is
 confirmed, it will notify Emily about it so that the sBTC can process it.
