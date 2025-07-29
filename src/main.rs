@@ -166,8 +166,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::error!(%error, "failed to construct the configuration");
     })?;
 
-    let context = Context::try_from(&config)?;
-
     let monitored = config
         .deposit
         .iter()
@@ -181,6 +179,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         None => (),
     }
+
+    let context = Context::try_from(&config)?;
 
     let mut deposit_monitor = DepositMonitor::new(context.clone(), monitored);
 
